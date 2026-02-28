@@ -75,6 +75,11 @@ const Index = () => {
                   <span className="font-bold">{stats.played}/{stats.total}</span> matches
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4 text-primary-foreground/70" />
+                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                <Moon className="h-4 w-4 text-primary-foreground/70" />
+              </div>
               <Button
                 variant="ghost"
                 size="sm"

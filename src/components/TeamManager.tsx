@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Tournament } from '@/lib/types';
-import { addTeam, removeTeam } from '@/lib/tournament-store';
+import { addTeam, removeTeam, generateTeamTemplate, importTeamsFromCSV } from '@/lib/tournament-store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Users } from 'lucide-react';
+import { Plus, Trash2, Users, Download, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   tournament: Tournament;
@@ -12,11 +13,38 @@ interface Props {
 
 export function TeamManager({ tournament, onChange }: Props) {
   const [name, setName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = () => {
     if (!name.trim()) return;
     onChange(addTeam(tournament, name.trim()));
     setName('');
+  };
+
+  const handleDownloadTemplate = () => {
+    const csv = generateTeamTemplate(tournament);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'team-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const csv = ev.target?.result as string;
+      const updated = importTeamsFromCSV(tournament, csv);
+      const newCount = updated.teams.length - tournament.teams.length;
+      onChange(updated);
+      toast.success(`Imported ${newCount} team${newCount !== 1 ? 's' : ''}`);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -26,7 +54,7 @@ export function TeamManager({ tournament, onChange }: Props) {
         <h2 className="text-xl font-bold">Teams ({tournament.teams.length})</h2>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Input
           placeholder="Team name..."
           value={name}
@@ -37,6 +65,15 @@ export function TeamManager({ tournament, onChange }: Props) {
         <Button onClick={handleAdd} size="sm" className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
           <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
+        <div className="flex gap-1 ml-auto">
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
+            <Download className="h-4 w-4 mr-1" /> Template
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1" /> Import CSV
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleUpload} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">

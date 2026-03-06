@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Tournament } from '@/lib/types';
-import { updateScore, clearScore, getTeamName, exportFixturesToCSV, addManualFixture } from '@/lib/tournament-store';
+import { updateScore, clearScore, getTeamName, exportFixturesToCSV, addManualFixture, generateFixtureTemplate, importFixturesFromCSV } from '@/lib/tournament-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Download, Check, RotateCcw, Plus } from 'lucide-react';
+import { Calendar, Download, Check, RotateCcw, Plus, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   tournament: Tournament;
@@ -18,6 +19,7 @@ export function FixtureManager({ tournament, onChange }: Props) {
   const [manualPoolId, setManualPoolId] = useState('');
   const [manualHomeId, setManualHomeId] = useState('');
   const [manualAwayId, setManualAwayId] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddManualFixture = () => {
     if (!manualPoolId || !manualHomeId || !manualAwayId || manualHomeId === manualAwayId) return;
@@ -50,11 +52,48 @@ export function FixtureManager({ tournament, onChange }: Props) {
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadTemplate = () => {
+    const csv = generateFixtureTemplate(tournament);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fixture-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const csv = ev.target?.result as string;
+      const updated = importFixturesFromCSV(tournament, csv);
+      const newCount = updated.fixtures.length - tournament.fixtures.length;
+      onChange(updated);
+      toast.success(`Imported ${newCount} fixture${newCount !== 1 ? 's' : ''}`);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-secondary" />
-        <h2 className="text-xl font-bold">Fixtures</h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-secondary" />
+          <h2 className="text-xl font-bold">Fixtures</h2>
+        </div>
+        <div className="flex gap-1">
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
+            <Download className="h-4 w-4 mr-1" /> Template
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1" /> Import CSV
+          </Button>
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleUpload} />
+        </div>
       </div>
 
       {/* Manual Fixture Creation */}
@@ -139,18 +178,13 @@ export function FixtureManager({ tournament, onChange }: Props) {
                         {isEditing ? (
                           <div className="flex items-center gap-1">
                             <Input
-                              type="number"
-                              min="0"
-                              value={homeScore}
+                              type="number" min="0" value={homeScore}
                               onChange={e => setHomeScore(e.target.value)}
-                              className="w-14 h-8 text-center text-sm"
-                              autoFocus
+                              className="w-14 h-8 text-center text-sm" autoFocus
                             />
                             <span className="text-muted-foreground text-xs">-</span>
                             <Input
-                              type="number"
-                              min="0"
-                              value={awayScore}
+                              type="number" min="0" value={awayScore}
                               onChange={e => setAwayScore(e.target.value)}
                               className="w-14 h-8 text-center text-sm"
                               onKeyDown={e => e.key === 'Enter' && handleSaveScore(fixture.id)}
@@ -182,8 +216,7 @@ export function FixtureManager({ tournament, onChange }: Props) {
 
                         {fixture.played && !isEditing && (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="ghost" size="sm"
                             className="h-6 w-6 p-0 text-muted-foreground"
                             onClick={() => onChange(clearScore(tournament, fixture.id))}
                           >

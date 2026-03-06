@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Tournament } from '@/lib/types';
-import { generatePlayoffs, updatePlayoffScore, getTeamName } from '@/lib/tournament-store';
+import { generatePlayoffs, updatePlayoffScore, clearPlayoffScore, getTeamName } from '@/lib/tournament-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Swords, Zap, Check } from 'lucide-react';
+import { Swords, Zap, Check, RotateCcw } from 'lucide-react';
 
 interface Props {
   tournament: Tournament;
@@ -23,9 +23,13 @@ export function PlayoffBracket({ tournament, onChange }: Props) {
   const handleSaveScore = (matchId: string) => {
     const h = parseInt(homeScore);
     const a = parseInt(awayScore);
-    if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h === a) return; // no draws in playoffs
+    if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h === a) return;
     onChange(updatePlayoffScore(tournament, matchId, h, a));
     setEditingId(null);
+  };
+
+  const handleClearScore = (matchId: string) => {
+    onChange(clearPlayoffScore(tournament, matchId));
   };
 
   const rounds = [...new Set(tournament.playoffs.map(m => m.round))].sort((a, b) => b - a);
@@ -50,16 +54,13 @@ export function PlayoffBracket({ tournament, onChange }: Props) {
           <div className="flex items-center justify-center gap-3">
             <label className="text-sm font-medium">Top teams per pool:</label>
             <Input
-              type="number"
-              min={1}
-              max={8}
+              type="number" min={1} max={8}
               value={teamsPerPool}
               onChange={e => setTeamsPerPool(parseInt(e.target.value) || 2)}
               className="w-20 h-8"
             />
             <Button
-              onClick={handleGenerate}
-              size="sm"
+              onClick={handleGenerate} size="sm"
               className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
               disabled={tournament.pools.length === 0}
             >
@@ -70,8 +71,7 @@ export function PlayoffBracket({ tournament, onChange }: Props) {
       ) : (
         <div className="space-y-6">
           <Button
-            variant="outline"
-            size="sm"
+            variant="outline" size="sm"
             onClick={() => onChange({ ...tournament, playoffs: [] })}
           >
             Reset Bracket
@@ -123,29 +123,41 @@ export function PlayoffBracket({ tournament, onChange }: Props) {
                               </Button>
                             </div>
                           ) : (
-                            <button
-                              className="w-full text-left space-y-1"
-                              onClick={() => {
-                                if (!canEdit) return;
-                                setEditingId(match.id);
-                                setHomeScore(match.homeScore?.toString() || '');
-                                setAwayScore(match.awayScore?.toString() || '');
-                              }}
-                              disabled={!canEdit}
-                            >
-                              <div className={`flex justify-between text-sm ${
-                                match.played && match.homeScore! > match.awayScore! ? 'font-bold' : ''
-                              }`}>
-                                <span className="truncate">{getTeamName(tournament, match.homeTeamId)}</span>
-                                {match.played && <span className="font-mono">{match.homeScore}</span>}
-                              </div>
-                              <div className={`flex justify-between text-sm ${
-                                match.played && match.awayScore! > match.homeScore! ? 'font-bold' : ''
-                              }`}>
-                                <span className="truncate">{getTeamName(tournament, match.awayTeamId)}</span>
-                                {match.played && <span className="font-mono">{match.awayScore}</span>}
-                              </div>
-                            </button>
+                            <div className="relative">
+                              <button
+                                className="w-full text-left space-y-1"
+                                onClick={() => {
+                                  if (!canEdit) return;
+                                  setEditingId(match.id);
+                                  setHomeScore(match.homeScore?.toString() || '');
+                                  setAwayScore(match.awayScore?.toString() || '');
+                                }}
+                                disabled={!canEdit}
+                              >
+                                <div className={`flex justify-between text-sm ${
+                                  match.played && match.homeScore! > match.awayScore! ? 'font-bold' : ''
+                                }`}>
+                                  <span className="truncate">{getTeamName(tournament, match.homeTeamId)}</span>
+                                  {match.played && <span className="font-mono">{match.homeScore}</span>}
+                                </div>
+                                <div className={`flex justify-between text-sm ${
+                                  match.played && match.awayScore! > match.homeScore! ? 'font-bold' : ''
+                                }`}>
+                                  <span className="truncate">{getTeamName(tournament, match.awayTeamId)}</span>
+                                  {match.played && <span className="font-mono">{match.awayScore}</span>}
+                                </div>
+                              </button>
+                              {match.played && (
+                                <Button
+                                  variant="ghost" size="sm"
+                                  className="absolute -top-1 -right-1 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                  onClick={() => handleClearScore(match.id)}
+                                  title="Clear score & reset"
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           )}
                         </div>
                       );

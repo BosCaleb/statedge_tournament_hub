@@ -326,3 +326,127 @@ export function exportFixturesToCSV(t: Tournament, poolId: string): string {
     });
   return `${pool.name} Fixtures\n${header}\n${rows.join('\n')}`;
 }
+
+// --- Bulk CSV Templates & Imports ---
+
+export function generateTeamTemplate(t: Tournament): string {
+  const header = 'TeamName,PoolName';
+  const exampleRows = ['Example Team 1,Pool A', 'Example Team 2,Pool B'];
+  const poolNote = t.pools.length > 0
+    ? `# Available pools: ${t.pools.map(p => p.name).join(', ')}`
+    : '# No pools yet - pool names in the CSV will be auto-created';
+  return `${poolNote}\n${header}\n${exampleRows.join('\n')}`;
+}
+
+export function importTeamsFromCSV(t: Tournament, csv: string): Tournament {
+  const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+  // Skip header if it looks like one
+  const start = lines[0]?.toLowerCase().includes('teamname') ? 1 : 0;
+
+  let updated = { ...t, teams: [...t.teams], pools: [...t.pools] };
+
+  for (let i = start; i < lines.length; i++) {
+    const parts = lines[i].split(',').map(s => s.trim());
+    const teamName = parts[0];
+    const poolName = parts[1] || '';
+    if (!teamName) continue;
+
+    // Check if team already exists
+    if (updated.teams.find(tm => tm.name.toLowerCase() === teamName.toLowerCase())) continue;
+
+    const teamId = generateId();
+    let poolId: string | null = null;
+
+    if (poolName) {
+      let pool = updated.pools.find(p => p.name.toLowerCase() === poolName.toLowerCase());
+      if (!pool) {
+        pool = { id: generateId(), name: poolName, teamIds: [] };
+        updated.pools = [...updated.pools, pool];
+      }
+      poolId = pool.id;
+      updated.pools = updated.pools.map(p =>
+        p.id === poolId ? { ...p, teamIds: [...p.teamIds, teamId] } : p
+      );
+    }
+
+    updated.teams = [...updated.teams, { id: teamId, name: teamName, poolId }];
+  }
+
+  return updated;
+}
+
+export function generateFixtureTemplate(t: Tournament): string {
+  const header = 'PoolName,HomeTeam,AwayTeam,Round';
+  const pools = t.pools.map(p => p.name).join(', ');
+  const teams = t.teams.map(tm => tm.name).join(', ');
+  return `# Available pools: ${pools || 'None'}\n# Available teams: ${teams || 'None'}\n${header}\nPool A,Team 1,Team 2,1`;
+}
+
+export function importFixturesFromCSV(t: Tournament, csv: string): Tournament {
+  const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+  const start = lines[0]?.toLowerCase().includes('pool') ? 1 : 0;
+
+  let updated = { ...t, fixtures: [...t.fixtures] };
+
+  for (let i = start; i < lines.length; i++) {
+    const parts = lines[i].split(',').map(s => s.trim());
+    const [poolName, homeName, awayName, roundStr] = parts;
+    if (!poolName || !homeName || !awayName) continue;
+
+    const pool = updated.pools.find(p => p.name.toLowerCase() === poolName.toLowerCase());
+    const home = updated.teams.find(tm => tm.name.toLowerCase() === homeName.toLowerCase());
+    const away = updated.teams.find(tm => tm.name.toLowerCase() === awayName.toLowerCase());
+    if (!pool || !home || !away || home.id === away.id) continue;
+
+    const round = parseInt(roundStr) || 1;
+    updated.fixtures = [...updated.fixtures, {
+      id: generateId(),
+      poolId: pool.id,
+      homeTeamId: home.id,
+      awayTeamId: away.id,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      round,
+    }];
+  }
+
+  return updated;
+}
+
+export function clearPlayoffScore(t: Tournament, matchId: string): Tournament {
+  const match = t.playoffs.find(m => m.id === matchId);
+  if (!match || !match.played) return t;
+
+  let playoffs = t.playoffs.map(m =>
+    m.id === matchId ? { ...m, homeScore: null, awayScore: null, played: false } : m
+  );
+
+  // Clear the winner from next round
+  const nextRound = Math.floor(match.round / 2);
+  const nextPosition = Math.floor(match.position / 2);
+  if (nextRound >= 1) {
+    const winnerId = match.homeScore! > match.awayScore! ? match.homeTeamId : match.awayTeamId;
+    playoffs = clearAdvancedTeam(playoffs, nextRound, nextPosition, winnerId, match.position % 2 === 0);
+  }
+
+  return { ...t, playoffs };
+}
+
+function clearAdvancedTeam(playoffs: PlayoffMatch[], round: number, position: number, teamId: string | null, isHome: boolean): PlayoffMatch[] {
+  return playoffs.map(m => {
+    if (m.round === round && m.position === position) {
+      const updated = { ...m };
+      if (isHome) updated.homeTeamId = null;
+      else updated.awayTeamId = null;
+      // Also clear score if played
+      if (updated.played) {
+        updated.homeScore = null;
+        updated.awayScore = null;
+        updated.played = false;
+      }
+      return updated;
+    }
+    return m;
+  });
+}

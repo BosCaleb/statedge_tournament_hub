@@ -49,6 +49,7 @@ export interface Tournament {
   id: string;
   name: string;
   managerName: string;
+  logo: string | null; // base64 data URL
   teams: Team[];
   pools: Pool[];
   fixtures: Fixture[];
@@ -57,3 +58,5 @@ export interface Tournament {
   pointsForDraw: number;
   pointsForLoss: number;
 }
+
+export type UserRole = 'admin' | 'viewer';

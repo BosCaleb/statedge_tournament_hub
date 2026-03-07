@@ -34,6 +34,14 @@ export interface Standing {
   points: number;
 }
 
+export interface Player {
+  id: string;
+  name: string;
+  teamId: string | null;
+  jerseyNumber: string;
+  position: string;
+}
+
 export interface PlayoffMatch {
   id: string;
   round: number; // 1 = final, 2 = semi, 4 = quarter, etc.

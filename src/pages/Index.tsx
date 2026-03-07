@@ -6,12 +6,13 @@ import { PoolManager } from '@/components/PoolManager';
 import { FixtureManager } from '@/components/FixtureManager';
 import { StandingsView } from '@/components/StandingsView';
 import { PlayoffBracket } from '@/components/PlayoffBracket';
+import { PlayerManager } from '@/components/PlayerManager';
 import { LoginPage } from '@/components/LoginPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Trophy, Users, Layers, Calendar, BarChart3, Swords, RotateCcw, Sun, Moon, LogOut, Camera, Settings } from 'lucide-react';
+import { Trophy, Users, Layers, Calendar, BarChart3, Swords, RotateCcw, Sun, Moon, LogOut, Camera, Settings, UserPlus } from 'lucide-react';
 
 const Index = () => {
   const [tournament, setTournament] = useState<Tournament>(loadTournament);

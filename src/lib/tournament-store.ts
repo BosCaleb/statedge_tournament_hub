@@ -1,4 +1,4 @@
-import { Tournament, Team, Pool, Fixture, Standing, PlayoffMatch } from './types';
+import { Tournament, Team, Pool, Fixture, Standing, PlayoffMatch, Player } from './types';
 
 const STORAGE_KEY = 'tournament-manager-data';
 
@@ -16,6 +16,7 @@ export function getDefaultTournament(): Tournament {
     pools: [],
     fixtures: [],
     playoffs: [],
+    players: [],
     pointsForWin: 3,
     pointsForDraw: 1,
     pointsForLoss: 0,

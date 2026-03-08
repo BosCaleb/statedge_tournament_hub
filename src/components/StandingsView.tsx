@@ -48,20 +48,20 @@ export function StandingsView({ tournament }: Props) {
               </Button>
             </div>
 
-            <div className="rounded border overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded border overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm min-w-[480px]">
                 <thead>
                   <tr className="tournament-gradient text-primary-foreground">
-                    <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">#</th>
-                    <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">Team</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">P</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">W</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">D</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">L</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">GF</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">GA</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">GD</th>
-                    <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">Pts</th>
+                    <th className="text-left py-2 px-2 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">#</th>
+                    <th className="text-left py-2 px-2 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">Team</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">P</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">W</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">D</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">L</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">GF</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">GA</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">GD</th>
+                    <th className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-[10px] sm:text-xs uppercase tracking-wider">Pts</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -72,18 +72,18 @@ export function StandingsView({ tournament }: Props) {
                         i === 0 ? 'bg-accent/10 font-semibold border-l-4 border-l-accent' : 'hover:bg-muted/50'
                       }`}
                     >
-                      <td className="py-2.5 px-3 font-bold">{i + 1}</td>
-                      <td className="py-2.5 px-3 font-medium">{s.teamName}</td>
-                      <td className="text-center py-2.5 px-3">{s.played}</td>
-                      <td className="text-center py-2.5 px-3 font-bold text-success">{s.won}</td>
-                      <td className="text-center py-2.5 px-3">{s.drawn}</td>
-                      <td className="text-center py-2.5 px-3 text-destructive">{s.lost}</td>
-                      <td className="text-center py-2.5 px-3">{s.goalsFor}</td>
-                      <td className="text-center py-2.5 px-3">{s.goalsAgainst}</td>
-                      <td className="text-center py-2.5 px-3 score-badge">
+                      <td className="py-2 px-2 sm:py-2.5 sm:px-3 font-bold">{i + 1}</td>
+                      <td className="py-2 px-2 sm:py-2.5 sm:px-3 font-medium truncate max-w-[120px]">{s.teamName}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3">{s.played}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-success">{s.won}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3">{s.drawn}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 text-destructive">{s.lost}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3">{s.goalsFor}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3">{s.goalsAgainst}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 score-badge">
                         {s.goalDifference > 0 ? `+${s.goalDifference}` : s.goalDifference}
                       </td>
-                      <td className="text-center py-2.5 px-3 font-bold text-accent score-badge text-base">{s.points}</td>
+                      <td className="text-center py-2 px-1.5 sm:py-2.5 sm:px-3 font-bold text-accent score-badge text-sm sm:text-base">{s.points}</td>
                     </tr>
                   ))}
                 </tbody>

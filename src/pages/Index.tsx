@@ -371,6 +371,75 @@ function ViewerFixtures({ tournament }: { tournament: Tournament }) {
   );
 }
 
+/* Read-only player list for viewers */
+function ViewerPlayers({ tournament }: { tournament: Tournament }) {
+  const [filterTeam, setFilterTeam] = useState('all');
+  const players = (tournament.players || []).filter(
+    p => filterTeam === 'all' || p.teamId === filterTeam
+  );
+  const getTeamName = (teamId: string) =>
+    tournament.teams.find(t => t.id === teamId)?.name || 'Unassigned';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <UserPlus className="h-5 w-5 text-accent" />
+          <h2 className="text-xl">Players</h2>
+          <span className="text-xs bg-accent text-accent-foreground px-2 py-0.5 font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+            {players.length}
+          </span>
+        </div>
+        {tournament.teams.length > 0 && (
+          <select
+            value={filterTeam}
+            onChange={e => setFilterTeam(e.target.value)}
+            className="text-sm border rounded px-2 py-1 bg-card text-foreground"
+          >
+            <option value="all">All Teams</option>
+            {tournament.teams.map(t => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {players.length > 0 ? (
+        <div className="rounded border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="tournament-gradient text-primary-foreground">
+                <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">#</th>
+                <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">Name</th>
+                <th className="text-center py-2.5 px-3 font-bold text-xs uppercase tracking-wider">No.</th>
+                <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">Position</th>
+                <th className="text-left py-2.5 px-3 font-bold text-xs uppercase tracking-wider">Team</th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player, i) => (
+                <tr key={player.id} className="border-t hover:bg-muted/50 transition-colors">
+                  <td className="py-2.5 px-3 font-bold text-muted-foreground">{i + 1}</td>
+                  <td className="py-2.5 px-3 font-medium">{player.name}</td>
+                  <td className="text-center py-2.5 px-3 score-badge">{player.number || '—'}</td>
+                  <td className="py-2.5 px-3 text-muted-foreground capitalize">{player.position || '—'}</td>
+                  <td className="py-2.5 px-3">
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded font-medium">
+                      {getTeamName(player.teamId)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm py-8 text-center">No players registered yet</p>
+      )}
+    </div>
+  );
+}
+
 /* Read-only playoff view for viewers */
 function ViewerPlayoffs({ tournament }: { tournament: Tournament }) {
   const getName = (t: Tournament, id: string | null) => {

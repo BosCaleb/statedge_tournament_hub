@@ -35,10 +35,10 @@ export function LoginPage({ onLogin }: Props) {
       <div className="h-1 gold-gradient" />
       
       {/* ESPN-style header */}
-      <div className="tournament-gradient py-4">
-        <div className="container flex items-center justify-center gap-3">
-          <Trophy className="h-8 w-8 text-accent" />
-          <h1 className="text-3xl text-primary-foreground tracking-wider">Tournament Manager</h1>
+      <div className="tournament-gradient py-3 sm:py-4">
+        <div className="container flex items-center justify-center gap-2 sm:gap-3 px-4">
+          <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
+          <h1 className="text-xl sm:text-3xl text-primary-foreground tracking-wider">Tournament Manager</h1>
         </div>
       </div>
       <div className="h-1 gold-gradient" />

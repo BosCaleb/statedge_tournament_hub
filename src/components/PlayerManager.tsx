@@ -98,46 +98,50 @@ export function PlayerManager({ tournament, onChange }: Props) {
       </div>
 
       {/* Add player form */}
-      <div className="flex flex-wrap gap-2 items-end">
-        <Input
-          placeholder="Player name..."
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleAdd()}
-          className="max-w-[180px]"
-        />
-        <Input
-          placeholder="#"
-          value={jerseyNumber}
-          onChange={e => setJerseyNumber(e.target.value)}
-          className="w-16"
-        />
-        <Input
-          placeholder="Position"
-          value={position}
-          onChange={e => setPosition(e.target.value)}
-          className="w-24"
-        />
-        <Select value={teamId} onValueChange={setTeamId}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Team" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="unassigned">No Team</SelectItem>
-            {tournament.teams.map(team => (
-              <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={handleAdd} size="sm" className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-          <Plus className="h-4 w-4 mr-1" /> Add
-        </Button>
-        <div className="flex gap-1 ml-auto">
-          <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-            <Download className="h-4 w-4 mr-1" /> Template
+      <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-2 sm:items-end">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Player name..."
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            className="flex-1 sm:max-w-[180px]"
+          />
+          <Input
+            placeholder="#"
+            value={jerseyNumber}
+            onChange={e => setJerseyNumber(e.target.value)}
+            className="w-14 sm:w-16"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Position"
+            value={position}
+            onChange={e => setPosition(e.target.value)}
+            className="w-24"
+          />
+          <Select value={teamId} onValueChange={setTeamId}>
+            <SelectTrigger className="flex-1 sm:w-[160px]">
+              <SelectValue placeholder="Team" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">No Team</SelectItem>
+              {tournament.teams.map(team => (
+                <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleAdd} size="sm" className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+            <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4 mr-1" /> Import CSV
+        </div>
+        <div className="flex gap-1 w-full sm:w-auto sm:ml-auto">
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="flex-1 sm:flex-none text-[10px] sm:text-xs">
+            <Download className="h-3.5 w-3.5 mr-1" /> Template
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none text-[10px] sm:text-xs">
+            <Upload className="h-3.5 w-3.5 mr-1" /> Import
           </Button>
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleUpload} />
         </div>

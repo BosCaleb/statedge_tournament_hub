@@ -282,7 +282,7 @@ const Index = () => {
         ) : (
           /* Viewer: read-only tabs */
           <Tabs defaultValue="standings" className="space-y-6">
-            <TabsList className="grid grid-cols-3 w-full max-w-md bg-card border rounded-none h-auto p-0">
+            <TabsList className="grid grid-cols-4 w-full max-w-lg bg-card border rounded-none h-auto p-0">
               <TabsTrigger value="standings" className="gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2.5 uppercase tracking-wide text-xs font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Standings</span>
@@ -290,6 +290,10 @@ const Index = () => {
               <TabsTrigger value="fixtures" className="gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2.5 uppercase tracking-wide text-xs font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                 <Calendar className="h-4 w-4" />
                 <span className="hidden sm:inline">Fixtures</span>
+              </TabsTrigger>
+              <TabsTrigger value="players" className="gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2.5 uppercase tracking-wide text-xs font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Players</span>
               </TabsTrigger>
               <TabsTrigger value="playoffs" className="gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2.5 uppercase tracking-wide text-xs font-bold" style={{ fontFamily: 'var(--font-display)' }}>
                 <Swords className="h-4 w-4" />
@@ -302,6 +306,9 @@ const Index = () => {
             </TabsContent>
             <TabsContent value="fixtures">
               <ViewerFixtures tournament={tournament} />
+            </TabsContent>
+            <TabsContent value="players">
+              <ViewerPlayers tournament={tournament} />
             </TabsContent>
             <TabsContent value="playoffs">
               <ViewerPlayoffs tournament={tournament} />

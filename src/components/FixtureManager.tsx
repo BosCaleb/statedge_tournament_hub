@@ -84,17 +84,17 @@ export function FixtureManager({ tournament, onChange }: Props) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-accent" />
-          <h2 className="text-xl">Fixtures</h2>
+          <h2 className="text-lg sm:text-xl">Fixtures</h2>
         </div>
-        <div className="flex gap-1">
-          <Button variant="outline" size="sm" onClick={() => exportFixturesPDF(tournament)} className="uppercase tracking-wide text-xs font-bold">
-            <FileText className="h-4 w-4 mr-1" /> PDF
+        <div className="flex gap-1 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => exportFixturesPDF(tournament)} className="uppercase tracking-wide text-[10px] sm:text-xs font-bold h-7 sm:h-8 px-2 sm:px-3">
+            <FileText className="h-3.5 w-3.5 mr-1" /> PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="uppercase tracking-wide text-xs font-bold">
-            <Download className="h-4 w-4 mr-1" /> Template
+          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="uppercase tracking-wide text-[10px] sm:text-xs font-bold h-7 sm:h-8 px-2 sm:px-3">
+            <Download className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Template</span><span className="sm:hidden">Tpl</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="uppercase tracking-wide text-xs font-bold">
-            <Upload className="h-4 w-4 mr-1" /> Import
+          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="uppercase tracking-wide text-[10px] sm:text-xs font-bold h-7 sm:h-8 px-2 sm:px-3">
+            <Upload className="h-3.5 w-3.5 mr-1" /> Import
           </Button>
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleUpload} />
         </div>
@@ -104,9 +104,9 @@ export function FixtureManager({ tournament, onChange }: Props) {
       {tournament.pools.length > 0 && (
         <div className="rounded border bg-card p-4 space-y-3 border-l-4 border-l-accent">
           <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground" style={{ fontFamily: 'var(--font-display)' }}>Add Manual Fixture</h3>
-          <div className="flex flex-wrap gap-2 items-end">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-end">
             <Select value={manualPoolId} onValueChange={v => { setManualPoolId(v); setManualHomeId(''); setManualAwayId(''); }}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Pool" />
               </SelectTrigger>
               <SelectContent>
@@ -115,28 +115,30 @@ export function FixtureManager({ tournament, onChange }: Props) {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={manualHomeId} onValueChange={setManualHomeId} disabled={!manualPoolId}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Home team" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedPoolTeams.filter(t => t.id !== manualAwayId).map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-muted-foreground font-bold text-xs px-1 uppercase score-badge">vs</span>
-            <Select value={manualAwayId} onValueChange={setManualAwayId} disabled={!manualPoolId}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Away team" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedPoolTeams.filter(t => t.id !== manualHomeId).map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button size="sm" onClick={handleAddManualFixture} disabled={!manualHomeId || !manualAwayId} className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold uppercase tracking-wide">
+            <div className="flex gap-2 items-center w-full sm:w-auto">
+              <Select value={manualHomeId} onValueChange={setManualHomeId} disabled={!manualPoolId}>
+                <SelectTrigger className="flex-1 sm:w-40">
+                  <SelectValue placeholder="Home" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedPoolTeams.filter(t => t.id !== manualAwayId).map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-muted-foreground font-bold text-xs px-1 uppercase score-badge">vs</span>
+              <Select value={manualAwayId} onValueChange={setManualAwayId} disabled={!manualPoolId}>
+                <SelectTrigger className="flex-1 sm:w-40">
+                  <SelectValue placeholder="Away" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedPoolTeams.filter(t => t.id !== manualHomeId).map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button size="sm" onClick={handleAddManualFixture} disabled={!manualHomeId || !manualAwayId} className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold uppercase tracking-wide w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
@@ -173,9 +175,9 @@ export function FixtureManager({ tournament, onChange }: Props) {
                     return (
                       <div
                         key={fixture.id}
-                        className="stat-card flex items-center justify-between gap-2 animate-slide-in"
+                        className="stat-card flex items-center justify-between gap-1 sm:gap-2 animate-slide-in"
                       >
-                        <span className="font-medium text-sm flex-1 text-right">
+                        <span className="font-medium text-xs sm:text-sm flex-1 text-right truncate">
                           {getTeamName(tournament, fixture.homeTeamId)}
                         </span>
 
@@ -214,7 +216,7 @@ export function FixtureManager({ tournament, onChange }: Props) {
                           </button>
                         )}
 
-                        <span className="font-medium text-sm flex-1">
+                        <span className="font-medium text-xs sm:text-sm flex-1 truncate">
                           {getTeamName(tournament, fixture.awayTeamId)}
                         </span>
 

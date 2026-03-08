@@ -107,11 +107,11 @@
     --warning-foreground: 220 55% 10%;
 
     --sidebar-background: 220 55% 6%;
-    --sidebar-foreground: 0 0% 93%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 45 95% 55%;
     --sidebar-primary-foreground: 220 55% 10%;
     --sidebar-accent: 220 40% 16%;
-    --sidebar-accent-foreground: 0 0% 93%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 220 30% 16%;
     --sidebar-ring: 45 95% 55%;
     --chart-1: 45 95% 55%;

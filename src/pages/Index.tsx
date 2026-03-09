@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Tournament, UserRole } from '@/lib/types';
+import { useNavigate } from 'react-router-dom';
 import { loadTournament, saveTournament, getDefaultTournament } from '@/lib/tournament-store';
 import { TeamManager } from '@/components/TeamManager';
 import { PoolManager } from '@/components/PoolManager';
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Trophy, Users, Layers, Calendar, BarChart3, Swords, RotateCcw, Sun, Moon, LogOut, Camera, Settings, UserPlus } from 'lucide-react';
+import { Trophy, Users, Layers, Calendar, BarChart3, Swords, RotateCcw, Sun, Moon, LogOut, Camera, Settings, UserPlus, Monitor, MapPin, Clock } from 'lucide-react';
 
 const Index = () => {
   const [tournament, setTournament] = useState<Tournament>(loadTournament);
@@ -209,6 +210,15 @@ const Index = () => {
             <span className="bg-primary-foreground/10 text-primary-foreground px-2 sm:px-3 py-1 sm:py-1.5 font-bold uppercase tracking-wide border-l border-primary-foreground/10 whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
               {stats.played}/{stats.total} Played
             </span>
+            <a
+              href="/scoreboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-accent text-accent-foreground px-2 sm:px-3 py-1 sm:py-1.5 font-bold uppercase tracking-wide border-l border-primary-foreground/10 whitespace-nowrap flex items-center gap-1 hover:bg-accent/90 transition-colors"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              <Monitor className="h-3 w-3" /> Scoreboard
+            </a>
           </div>
 
           {/* Password Settings */}
@@ -354,18 +364,27 @@ function ViewerFixtures({ tournament }: { tournament: Tournament }) {
               <div key={round} className="space-y-2">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">Round {round}</p>
                 {poolFixtures.filter(f => f.round === round).map(fixture => (
-                  <div key={fixture.id} className="stat-card flex items-center justify-between gap-2">
-                    <span className="font-medium text-sm flex-1 text-right">
-                      {getName(tournament, fixture.homeTeamId)}
-                    </span>
-                    <span className={`px-3 py-1 rounded text-sm font-bold min-w-[70px] text-center score-badge ${
-                      fixture.played ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {fixture.played ? `${fixture.homeScore} - ${fixture.awayScore}` : 'VS'}
-                    </span>
-                    <span className="font-medium text-sm flex-1">
-                      {getName(tournament, fixture.awayTeamId)}
-                    </span>
+                  <div key={fixture.id} className="space-y-0">
+                    <div className="stat-card flex items-center justify-between gap-2">
+                      <span className="font-medium text-xs sm:text-sm flex-1 text-right truncate">
+                        {getName(tournament, fixture.homeTeamId)}
+                      </span>
+                      <span className={`px-3 py-1 rounded text-sm font-bold min-w-[70px] text-center score-badge ${
+                        fixture.played ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {fixture.played ? `${fixture.homeScore} - ${fixture.awayScore}` : 'VS'}
+                      </span>
+                      <span className="font-medium text-xs sm:text-sm flex-1 truncate">
+                        {getName(tournament, fixture.awayTeamId)}
+                      </span>
+                    </div>
+                    {(fixture.date || fixture.time || fixture.venue) && (
+                      <div className="flex flex-wrap gap-2 px-2 py-1 text-[10px] sm:text-xs text-muted-foreground">
+                        {fixture.date && <span className="flex items-center gap-0.5"><Calendar className="h-2.5 w-2.5" />{fixture.date}</span>}
+                        {fixture.time && <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{fixture.time}</span>}
+                        {fixture.venue && <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" />{fixture.venue}</span>}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -123,6 +123,9 @@ export function generateFixtures(t: Tournament, poolId: string): Tournament {
         awayScore: null,
         played: false,
         round: round + 1,
+        date: null,
+        time: null,
+        venue: null,
       });
     }
     // Rotate: fix first, rotate rest
@@ -313,6 +316,9 @@ export function addManualFixture(t: Tournament, poolId: string, homeTeamId: stri
     awayScore: null,
     played: false,
     round: maxRound + 1,
+    date: null,
+    time: null,
+    venue: null,
   };
   return { ...t, fixtures: [...t.fixtures, fixture] };
 }
@@ -415,6 +421,9 @@ export function importFixturesFromCSV(t: Tournament, csv: string): Tournament {
       awayScore: null,
       played: false,
       round,
+      date: null,
+      time: null,
+      venue: null,
     }];
   }
 
@@ -456,6 +465,15 @@ function clearAdvancedTeam(playoffs: PlayoffMatch[], round: number, position: nu
     }
     return m;
   });
+}
+
+// --- Fixture Scheduling ---
+
+export function updateFixtureSchedule(t: Tournament, fixtureId: string, date: string | null, time: string | null, venue: string | null): Tournament {
+  const fixtures = t.fixtures.map(f =>
+    f.id === fixtureId ? { ...f, date, time, venue } : f
+  );
+  return { ...t, fixtures };
 }
 
 // --- Player Management ---

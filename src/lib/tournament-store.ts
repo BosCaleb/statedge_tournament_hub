@@ -123,6 +123,9 @@ export function generateFixtures(t: Tournament, poolId: string): Tournament {
         awayScore: null,
         played: false,
         round: round + 1,
+        date: null,
+        time: null,
+        venue: null,
       });
     }
     // Rotate: fix first, rotate rest

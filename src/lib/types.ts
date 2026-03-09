@@ -19,6 +19,9 @@ export interface Fixture {
   awayScore: number | null;
   played: boolean;
   round: number;
+  date: string | null;
+  time: string | null;
+  venue: string | null;
 }
 
 export interface Standing {

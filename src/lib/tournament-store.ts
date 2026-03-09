@@ -316,6 +316,9 @@ export function addManualFixture(t: Tournament, poolId: string, homeTeamId: stri
     awayScore: null,
     played: false,
     round: maxRound + 1,
+    date: null,
+    time: null,
+    venue: null,
   };
   return { ...t, fixtures: [...t.fixtures, fixture] };
 }

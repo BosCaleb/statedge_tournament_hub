@@ -467,6 +467,15 @@ function clearAdvancedTeam(playoffs: PlayoffMatch[], round: number, position: nu
   });
 }
 
+// --- Fixture Scheduling ---
+
+export function updateFixtureSchedule(t: Tournament, fixtureId: string, date: string | null, time: string | null, venue: string | null): Tournament {
+  const fixtures = t.fixtures.map(f =>
+    f.id === fixtureId ? { ...f, date, time, venue } : f
+  );
+  return { ...t, fixtures };
+}
+
 // --- Player Management ---
 
 export function addPlayer(t: Tournament, name: string, teamId: string | null, jerseyNumber: string, position: string): Tournament {

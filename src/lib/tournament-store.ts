@@ -1,4 +1,4 @@
-import { Tournament, Team, Pool, Fixture, Standing, PlayoffMatch } from './types';
+import { Tournament, Team, Pool, Fixture, Standing, PlayoffMatch, Player } from './types';
 
 const STORAGE_KEY = 'tournament-manager-data';
 
@@ -16,6 +16,7 @@ export function getDefaultTournament(): Tournament {
     pools: [],
     fixtures: [],
     playoffs: [],
+    players: [],
     pointsForWin: 3,
     pointsForDraw: 1,
     pointsForLoss: 0,
@@ -25,7 +26,12 @@ export function getDefaultTournament(): Tournament {
 export function loadTournament(): Tournament {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
-    if (data) return JSON.parse(data);
+    if (data) {
+      const parsed = JSON.parse(data);
+      // Migrate old data missing players field
+      if (!parsed.players) parsed.players = [];
+      return parsed;
+    }
   } catch {}
   return getDefaultTournament();
 }
@@ -117,6 +123,9 @@ export function generateFixtures(t: Tournament, poolId: string): Tournament {
         awayScore: null,
         played: false,
         round: round + 1,
+        date: null,
+        time: null,
+        venue: null,
       });
     }
     // Rotate: fix first, rotate rest
@@ -307,6 +316,9 @@ export function addManualFixture(t: Tournament, poolId: string, homeTeamId: stri
     awayScore: null,
     played: false,
     round: maxRound + 1,
+    date: null,
+    time: null,
+    venue: null,
   };
   return { ...t, fixtures: [...t.fixtures, fixture] };
 }
@@ -409,6 +421,9 @@ export function importFixturesFromCSV(t: Tournament, csv: string): Tournament {
       awayScore: null,
       played: false,
       round,
+      date: null,
+      time: null,
+      venue: null,
     }];
   }
 
@@ -450,4 +465,75 @@ function clearAdvancedTeam(playoffs: PlayoffMatch[], round: number, position: nu
     }
     return m;
   });
+}
+
+// --- Fixture Scheduling ---
+
+export function updateFixtureSchedule(t: Tournament, fixtureId: string, date: string | null, time: string | null, venue: string | null): Tournament {
+  const fixtures = t.fixtures.map(f =>
+    f.id === fixtureId ? { ...f, date, time, venue } : f
+  );
+  return { ...t, fixtures };
+}
+
+// --- Player Management ---
+
+export function addPlayer(t: Tournament, name: string, teamId: string | null, jerseyNumber: string, position: string): Tournament {
+  const player: Player = { id: generateId(), name, teamId, jerseyNumber, position };
+  return { ...t, players: [...t.players, player] };
+}
+
+export function removePlayer(t: Tournament, playerId: string): Tournament {
+  return { ...t, players: t.players.filter(p => p.id !== playerId) };
+}
+
+export function updatePlayer(t: Tournament, playerId: string, updates: Partial<Player>): Tournament {
+  return { ...t, players: t.players.map(p => p.id === playerId ? { ...p, ...updates } : p) };
+}
+
+export function generatePlayerTemplate(t: Tournament): string {
+  const header = 'PlayerName,TeamName,JerseyNumber,Position';
+  const teams = t.teams.map(tm => tm.name).join(', ');
+  return `# Available teams: ${teams || 'None'}\n# Positions: GK, DEF, MID, FWD (or any custom)\n${header}\nJohn Doe,Team A,10,MID\nJane Smith,Team B,1,GK`;
+}
+
+export function importPlayersFromCSV(t: Tournament, csv: string): Tournament {
+  const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+  const start = lines[0]?.toLowerCase().includes('playername') ? 1 : 0;
+
+  let updated = { ...t, players: [...t.players] };
+
+  for (let i = start; i < lines.length; i++) {
+    const parts = lines[i].split(',').map(s => s.trim());
+    const [playerName, teamName, jerseyNumber, position] = parts;
+    if (!playerName) continue;
+
+    // Check duplicate
+    if (updated.players.find(p => p.name.toLowerCase() === playerName.toLowerCase())) continue;
+
+    let teamId: string | null = null;
+    if (teamName) {
+      const team = updated.teams.find(tm => tm.name.toLowerCase() === teamName.toLowerCase());
+      if (team) teamId = team.id;
+    }
+
+    updated.players = [...updated.players, {
+      id: generateId(),
+      name: playerName,
+      teamId,
+      jerseyNumber: jerseyNumber || '',
+      position: position || '',
+    }];
+  }
+
+  return updated;
+}
+
+export function exportPlayersToCsv(t: Tournament): string {
+  const header = 'PlayerName,TeamName,JerseyNumber,Position';
+  const rows = t.players.map(p => {
+    const teamName = p.teamId ? t.teams.find(tm => tm.id === p.teamId)?.name || '' : '';
+    return `${p.name},${teamName},${p.jerseyNumber},${p.position}`;
+  });
+  return `Players\n${header}\n${rows.join('\n')}`;
 }

@@ -19,6 +19,9 @@ export interface Fixture {
   awayScore: number | null;
   played: boolean;
   round: number;
+  date: string | null;
+  time: string | null;
+  venue: string | null;
 }
 
 export interface Standing {
@@ -32,6 +35,14 @@ export interface Standing {
   goalsAgainst: number;
   goalDifference: number;
   points: number;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  teamId: string | null;
+  jerseyNumber: string;
+  position: string;
 }
 
 export interface PlayoffMatch {
@@ -54,6 +65,7 @@ export interface Tournament {
   pools: Pool[];
   fixtures: Fixture[];
   playoffs: PlayoffMatch[];
+  players: Player[];
   pointsForWin: number;
   pointsForDraw: number;
   pointsForLoss: number;

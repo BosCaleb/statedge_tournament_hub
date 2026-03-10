@@ -172,7 +172,7 @@ const Index = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPasswordSettings(!showPasswordSettings)}
-                    className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 h-7 w-7 sm:h-8 sm:w-8 p-0"
+                    className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-foreground/10 h-7 w-7 sm:h-8 sm:w-8 p-0"
                   >
                     <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>

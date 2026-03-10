@@ -223,8 +223,8 @@ const Index = () => {
 
           {/* Password Settings */}
           {showPasswordSettings && isAdmin && (
-            <div className="mt-3 p-3 rounded bg-primary-foreground/5 border border-primary-foreground/10 max-w-sm">
-              <p className="text-xs font-bold text-primary-foreground mb-2 uppercase tracking-wide">Change Admin Password</p>
+            <div className="mt-3 p-3 rounded bg-sidebar-foreground/5 border border-sidebar-foreground/10 max-w-sm">
+              <p className="text-xs font-bold text-sidebar-foreground mb-2 uppercase tracking-wide">Change Admin Password</p>
               <div className="flex gap-2">
                 <Input
                   type="password"
@@ -232,7 +232,7 @@ const Index = () => {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
-                  className="h-8 text-sm bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/40"
+                  className="h-8 text-sm bg-sidebar-foreground/10 border-sidebar-foreground/20 text-sidebar-foreground placeholder:text-sidebar-foreground/40"
                 />
                 <Button size="sm" onClick={handleChangePassword} className="h-8 text-xs bg-accent text-accent-foreground hover:bg-accent/90 font-bold uppercase">Save</Button>
               </div>

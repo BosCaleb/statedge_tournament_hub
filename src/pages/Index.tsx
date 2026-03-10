@@ -101,7 +101,7 @@ const Index = () => {
       <div className="h-1 gold-gradient" />
 
       {/* Header */}
-      <header className="tournament-gradient text-primary-foreground">
+      <header className="tournament-gradient text-sidebar-foreground">
         <div className="container py-3 sm:py-4 px-3 sm:px-8">
           {/* Top row: logo + name + actions */}
           <div className="flex items-center justify-between gap-2">

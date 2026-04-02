@@ -54,6 +54,7 @@ export interface PlayoffMatch {
   homeScore: number | null;
   awayScore: number | null;
   played: boolean;
+  isThirdPlace?: boolean;
 }
 
 export interface Tournament {

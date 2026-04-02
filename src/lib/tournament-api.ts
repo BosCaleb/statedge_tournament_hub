@@ -380,3 +380,62 @@ export function subscribeToTournamentRealtime(tournamentId: string, onChange: ()
     });
   };
 }
+
+export async function listTournaments(): Promise<Array<{
+  id: string;
+  name: string;
+  managerName: string;
+  logo: string | null;
+  teamCount: number;
+  createdAt: string;
+}>> {
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('id, name, manager_name, logo_path, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const results = await Promise.all(
+    (data ?? []).map(async (row) => {
+      const { count } = await supabase
+        .from('teams')
+        .select('id', { count: 'exact', head: true })
+        .eq('tournament_id', row.id);
+      return {
+        id: row.id,
+        name: row.name,
+        managerName: row.manager_name as string,
+        logo: publicLogoUrl(row.logo_path as string | null),
+        teamCount: count ?? 0,
+        createdAt: row.created_at as string,
+      };
+    })
+  );
+
+  return results;
+}
+
+export async function createTournament(name: string, managerName: string): Promise<string> {
+  const starter = getDefaultTournament();
+  starter.name = name;
+  starter.managerName = managerName;
+
+  const { data, error } = await supabase
+    .from('tournaments')
+    .insert({
+      id: starter.id,
+      name: starter.name,
+      manager_name: starter.managerName,
+      logo_path: null,
+      is_public: true,
+      points_for_win: starter.pointsForWin,
+      points_for_draw: starter.pointsForDraw,
+      points_for_loss: starter.pointsForLoss,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}

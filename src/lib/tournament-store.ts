@@ -155,45 +155,94 @@ export function calculateStandings(t: Tournament, poolId: string): Standing[] {
     };
   });
 
-  t.fixtures
-    .filter(f => f.poolId === poolId && f.played && f.homeScore !== null && f.awayScore !== null)
-    .forEach(f => {
-      const home = standingsMap[f.homeTeamId];
-      const away = standingsMap[f.awayTeamId];
-      if (!home || !away) return;
+  const playedFixtures = t.fixtures.filter(
+    f => f.poolId === poolId && f.played && f.homeScore !== null && f.awayScore !== null
+  );
 
-      home.played++;
-      away.played++;
-      home.goalsFor += f.homeScore!;
-      home.goalsAgainst += f.awayScore!;
-      away.goalsFor += f.awayScore!;
-      away.goalsAgainst += f.homeScore!;
+  playedFixtures.forEach(f => {
+    const home = standingsMap[f.homeTeamId];
+    const away = standingsMap[f.awayTeamId];
+    if (!home || !away) return;
 
-      if (f.homeScore! > f.awayScore!) {
-        home.won++; away.lost++;
-        home.points += t.pointsForWin;
-        away.points += t.pointsForLoss;
-      } else if (f.homeScore! < f.awayScore!) {
-        away.won++; home.lost++;
-        away.points += t.pointsForWin;
-        home.points += t.pointsForLoss;
-      } else {
-        home.drawn++; away.drawn++;
-        home.points += t.pointsForDraw;
-        away.points += t.pointsForDraw;
-      }
+    home.played++;
+    away.played++;
+    home.goalsFor += f.homeScore!;
+    home.goalsAgainst += f.awayScore!;
+    away.goalsFor += f.awayScore!;
+    away.goalsAgainst += f.homeScore!;
 
-      home.goalDifference = home.goalsFor - home.goalsAgainst;
-      away.goalDifference = away.goalsFor - away.goalsAgainst;
-    });
+    if (f.homeScore! > f.awayScore!) {
+      home.won++; away.lost++;
+      home.points += t.pointsForWin;
+      away.points += t.pointsForLoss;
+    } else if (f.homeScore! < f.awayScore!) {
+      away.won++; home.lost++;
+      away.points += t.pointsForWin;
+      home.points += t.pointsForLoss;
+    } else {
+      home.drawn++; away.drawn++;
+      home.points += t.pointsForDraw;
+      away.points += t.pointsForDraw;
+    }
 
-  // Sort: points > GD > GF > head-to-head (simplified: alphabetical)
+    home.goalDifference = home.goalsFor - home.goalsAgainst;
+    away.goalDifference = away.goalsFor - away.goalsAgainst;
+  });
+
+  function h2hCompare(idA: string, idB: string): number {
+    let ptsA = 0, ptsB = 0, gdA = 0, gdB = 0;
+    playedFixtures
+      .filter(f =>
+        (f.homeTeamId === idA && f.awayTeamId === idB) ||
+        (f.homeTeamId === idB && f.awayTeamId === idA)
+      )
+      .forEach(f => {
+        const isAHome = f.homeTeamId === idA;
+        const gfA = isAHome ? f.homeScore! : f.awayScore!;
+        const gfB = isAHome ? f.awayScore! : f.homeScore!;
+        gdA += gfA - gfB;
+        gdB += gfB - gfA;
+        if (gfA > gfB) { ptsA += t.pointsForWin; ptsB += t.pointsForLoss; }
+        else if (gfB > gfA) { ptsB += t.pointsForWin; ptsA += t.pointsForLoss; }
+        else { ptsA += t.pointsForDraw; ptsB += t.pointsForDraw; }
+      });
+    if (ptsA !== ptsB) return ptsB - ptsA;
+    if (gdA !== gdB) return gdB - gdA;
+    return 0;
+  }
+
   return Object.values(standingsMap).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
     if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+    const h2h = h2hCompare(a.teamId, b.teamId);
+    if (h2h !== 0) return h2h;
     return a.teamName.localeCompare(b.teamName);
   });
+}
+
+export function getFormGuide(t: Tournament, teamId: string, poolId: string, limit = 5): ('W' | 'D' | 'L')[] {
+  return t.fixtures
+    .filter(f =>
+      f.poolId === poolId &&
+      f.played &&
+      f.homeScore !== null &&
+      f.awayScore !== null &&
+      (f.homeTeamId === teamId || f.awayTeamId === teamId)
+    )
+    .sort((a, b) => {
+      if (a.date && b.date) return new Date(a.date).getTime() - new Date(b.date).getTime();
+      return a.round - b.round;
+    })
+    .slice(-limit)
+    .map(f => {
+      const isHome = f.homeTeamId === teamId;
+      const scored = isHome ? f.homeScore! : f.awayScore!;
+      const conceded = isHome ? f.awayScore! : f.homeScore!;
+      if (scored > conceded) return 'W';
+      if (scored < conceded) return 'L';
+      return 'D';
+    });
 }
 
 export function generatePlayoffs(t: Tournament, teamsPerPool: number): Tournament {
@@ -248,6 +297,21 @@ export function generatePlayoffs(t: Tournament, teamsPerPool: number): Tournamen
     currentRound = Math.floor(currentRound / 2);
   }
 
+  // Add 3rd place match if bracket has semi-finals (bracketSize >= 4)
+  if (bracketSize >= 4) {
+    playoffs.push({
+      id: generateId(),
+      round: 2,
+      position: 999,
+      homeTeamId: null,
+      awayTeamId: null,
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      isThirdPlace: true,
+    });
+  }
+
   return { ...t, playoffs };
 }
 
@@ -256,10 +320,11 @@ export function updatePlayoffScore(t: Tournament, matchId: string, homeScore: nu
     m.id === matchId ? { ...m, homeScore, awayScore, played: true } : m
   );
 
-  // Advance winner to next round
+  // Advance winner to next round and loser to 3rd place (for semi-finals)
   const match = playoffs.find(m => m.id === matchId);
-  if (match && match.played && homeScore !== awayScore) {
+  if (match && match.played && homeScore !== awayScore && !match.isThirdPlace) {
     const winnerId = homeScore > awayScore ? match.homeTeamId : match.awayTeamId;
+    const loserId = homeScore > awayScore ? match.awayTeamId : match.homeTeamId;
     const nextRound = Math.floor(match.round / 2);
     const nextPosition = Math.floor(match.position / 2);
 
@@ -270,6 +335,20 @@ export function updatePlayoffScore(t: Tournament, matchId: string, homeScore: nu
             return { ...m, homeTeamId: winnerId };
           } else {
             return { ...m, awayTeamId: winnerId };
+          }
+        }
+        return m;
+      });
+    }
+
+    // Populate 3rd place match from semi-final losers (round 2)
+    if (match.round === 2) {
+      playoffs = playoffs.map(m => {
+        if (m.isThirdPlace) {
+          if (match.position % 2 === 0) {
+            return { ...m, homeTeamId: loserId };
+          } else {
+            return { ...m, awayTeamId: loserId };
           }
         }
         return m;
@@ -427,12 +506,36 @@ export function clearPlayoffScore(t: Tournament, matchId: string): Tournament {
     m.id === matchId ? { ...m, homeScore: null, awayScore: null, played: false } : m
   );
 
+  if (match.isThirdPlace) {
+    return { ...t, playoffs };
+  }
+
   // Clear the winner from next round
   const nextRound = Math.floor(match.round / 2);
   const nextPosition = Math.floor(match.position / 2);
   if (nextRound >= 1) {
     const winnerId = match.homeScore! > match.awayScore! ? match.homeTeamId : match.awayTeamId;
     playoffs = clearAdvancedTeam(playoffs, nextRound, nextPosition, winnerId, match.position % 2 === 0);
+  }
+
+  // Clear the loser from 3rd place match (for semi-finals)
+  if (match.round === 2) {
+    const loserId = match.homeScore! > match.awayScore! ? match.awayTeamId : match.homeTeamId;
+    const isHomeInThirdPlace = match.position % 2 === 0;
+    playoffs = playoffs.map(m => {
+      if (m.isThirdPlace) {
+        const updated = { ...m };
+        if (isHomeInThirdPlace) updated.homeTeamId = null;
+        else updated.awayTeamId = null;
+        if (updated.played) {
+          updated.homeScore = null;
+          updated.awayScore = null;
+          updated.played = false;
+        }
+        return updated;
+      }
+      return m;
+    });
   }
 
   return { ...t, playoffs };

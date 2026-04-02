@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Tournament, UserRole } from '@/lib/types';
 import { TeamManager } from '@/components/TeamManager';
 import { PoolManager } from '@/components/PoolManager';
@@ -35,6 +36,7 @@ import {
   Camera,
   Monitor,
   UserPlus,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -49,6 +51,9 @@ import {
   uploadTournamentLogo,
 } from '@/lib/tournament-api';
 import { getDefaultTournament } from '@/lib/tournament-store';
+import { SetupWizard } from '@/components/SetupWizard';
+import { SettingsTab } from '@/components/SettingsTab';
+import { TournamentProgress } from '@/components/TournamentProgress';
 
 const Index = () => {
   const [tournament, setTournament] = useState<Tournament>(getDefaultTournament());
@@ -56,6 +61,7 @@ const Index = () => {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [wizardDismissed, setWizardDismissed] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -67,6 +73,8 @@ const Index = () => {
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = role === 'admin';
+  const { tournamentId: urlTournamentId } = useParams<{ tournamentId: string }>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -97,7 +105,7 @@ const Index = () => {
     try {
       setLoading(true);
       const sessionInfo = await getSessionProfile();
-      const id = await ensureDefaultTournament(sessionInfo.profile?.role === 'admin');
+      const id = urlTournamentId ?? await ensureDefaultTournament(sessionInfo.profile?.role === 'admin');
 
       setRole(sessionInfo.profile?.role ?? null);
       setTournamentId(id);
@@ -182,7 +190,7 @@ const Index = () => {
 
     setRole('admin');
 
-    const id = await ensureDefaultTournament(true);
+    const id = urlTournamentId ?? await ensureDefaultTournament(true);
     if (id) {
       setTournamentId(id);
       await refreshTournament(id, false);
@@ -347,7 +355,9 @@ const Index = () => {
               <Monitor className="h-3 w-3" /> Scoreboard
             </a>
             {saving && <span className="bg-white/10 text-white px-2 sm:px-3 py-1 sm:py-1.5 font-bold uppercase tracking-wide border-l border-primary-foreground/10 whitespace-nowrap">Saving…</span>}
+            <button onClick={() => navigate('/')} className="bg-white/10 text-white/70 hover:text-white px-2 sm:px-3 py-1 sm:py-1.5 font-bold uppercase tracking-wide border-l border-primary-foreground/10 whitespace-nowrap text-[10px] sm:text-xs hover:bg-white/15 transition-colors" style={{ fontFamily: 'var(--font-display)' }}>← All Tournaments</button>
           </div>
+          {isAdmin && <div className="mt-2"><TournamentProgress tournament={tournament} /></div>}
         </div>
       </header>
 
@@ -356,8 +366,11 @@ const Index = () => {
       <main className="container py-4 sm:py-6 px-3 sm:px-8">
         {isAdmin ? (
           <Tabs defaultValue="teams" className="space-y-4 sm:space-y-6">
+            {isAdmin && tournament.teams.length === 0 && !wizardDismissed && (
+              <SetupWizard tournament={tournament} onChange={(next) => void persistTournament(next)} onDismiss={() => setWizardDismissed(true)} />
+            )}
             <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-              <TabsList className="inline-flex sm:grid sm:grid-cols-6 w-auto sm:w-full sm:max-w-3xl bg-card border rounded-none h-auto p-0">
+              <TabsList className="inline-flex sm:grid sm:grid-cols-7 w-auto sm:w-full sm:max-w-4xl bg-card border rounded-none h-auto p-0">
                 <TabsTrigger value="teams" className="gap-1 sm:gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2 sm:py-2.5 px-3 sm:px-0 uppercase tracking-wide text-[10px] sm:text-xs font-bold whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
                   <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Teams
                 </TabsTrigger>
@@ -376,6 +389,9 @@ const Index = () => {
                 <TabsTrigger value="playoffs" className="gap-1 sm:gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2 sm:py-2.5 px-3 sm:px-0 uppercase tracking-wide text-[10px] sm:text-xs font-bold whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
                   <Swords className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Playoffs
                 </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-1 sm:gap-1.5 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none py-2 sm:py-2.5 px-3 sm:px-0 uppercase tracking-wide text-[10px] sm:text-xs font-bold whitespace-nowrap" style={{ fontFamily: 'var(--font-display)' }}>
+                  <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Settings
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -385,6 +401,7 @@ const Index = () => {
             <TabsContent value="fixtures"><FixtureManager tournament={tournament} onChange={(next) => void persistTournament(next)} /></TabsContent>
             <TabsContent value="standings"><StandingsView tournament={tournament} /></TabsContent>
             <TabsContent value="playoffs"><PlayoffBracket tournament={tournament} onChange={(next) => void persistTournament(next)} /></TabsContent>
+            <TabsContent value="settings"><SettingsTab tournament={tournament} onChange={(next) => void persistTournament(next, 'Settings saved')} /></TabsContent>
           </Tabs>
         ) : (
           <Tabs defaultValue="standings" className="space-y-4 sm:space-y-6">

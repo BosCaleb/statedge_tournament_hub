@@ -14,8 +14,9 @@ import { exportFixturesPDF } from '@/lib/pdf-export';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Check, Clock, Download, FileText, MapPin, Plus, RotateCcw, Upload } from 'lucide-react';
+import { Calendar, Check, Download, FileText, MapPin, Plus, RotateCcw, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadFile } from '@/lib/utils';
 
 interface Props {
   tournament: Tournament;
@@ -65,26 +66,12 @@ export function FixtureManager({ tournament, onChange, readOnly = false }: Props
   };
 
   const handleExport = (poolId: string) => {
-    const csv = exportFixturesToCSV(tournament, poolId);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
     const pool = tournament.pools.find((p) => p.id === poolId);
-    a.href = url;
-    a.download = `${pool?.name || 'fixtures'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(exportFixturesToCSV(tournament, poolId), `${pool?.name || 'fixtures'}.csv`);
   };
 
   const handleDownloadTemplate = () => {
-    const csv = generateFixtureTemplate(tournament);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'fixture-template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(generateFixtureTemplate(tournament), 'fixture-template.csv');
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,6 +181,9 @@ export function FixtureManager({ tournament, onChange, readOnly = false }: Props
                             <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-success" onClick={() => handleSaveScore(fixture.id)}>
                               <Check className="h-4 w-4" />
                             </Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setEditingId(null); setHomeScore(''); setAwayScore(''); }}>
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
                         ) : (
                           <button
@@ -213,7 +203,7 @@ export function FixtureManager({ tournament, onChange, readOnly = false }: Props
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        {fixture.date && <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {fixture.date}{fixture.time ? ` ${fixture.time}` : ''}</span>}
+                        {fixture.date && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {fixture.date}{fixture.time ? ` ${fixture.time}` : ''}</span>}
                         {fixture.venue && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {fixture.venue}</span>}
                       </div>
 
@@ -236,12 +226,15 @@ export function FixtureManager({ tournament, onChange, readOnly = false }: Props
                       )}
 
                       {!readOnly && isScheduling && (
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2">
                           <Input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} />
                           <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
                           <Input placeholder="Venue / Court" value={scheduleVenue} onChange={(e) => setScheduleVenue(e.target.value)} />
                           <Button onClick={() => handleSaveSchedule(fixture.id)}>
                             <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                          <Button variant="outline" onClick={() => { setScheduleId(null); setScheduleDate(''); setScheduleTime(''); setScheduleVenue(''); }}>
+                            <X className="h-4 w-4 mr-1" /> Cancel
                           </Button>
                         </div>
                       )}

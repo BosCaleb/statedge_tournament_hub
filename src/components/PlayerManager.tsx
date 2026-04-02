@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, UserPlus, Download, Upload, Edit2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadFile } from '@/lib/utils';
 
 interface Props {
   tournament: Tournament;
@@ -45,14 +46,7 @@ export function PlayerManager({ tournament, onChange }: Props) {
   };
 
   const handleDownloadTemplate = () => {
-    const csv = generatePlayerTemplate(tournament);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'player-template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(generatePlayerTemplate(tournament), 'player-template.csv');
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

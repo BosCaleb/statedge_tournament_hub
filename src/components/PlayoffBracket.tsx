@@ -4,6 +4,7 @@ import { generatePlayoffs, updatePlayoffScore, clearPlayoffScore, getTeamName } 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Swords, Zap, Check, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   tournament: Tournament;
@@ -25,7 +26,11 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
   const handleSaveScore = (matchId: string) => {
     const h = parseInt(homeScore, 10);
     const a = parseInt(awayScore, 10);
-    if (readOnly || Number.isNaN(h) || Number.isNaN(a) || h < 0 || a < 0 || h === a) return;
+    if (readOnly || Number.isNaN(h) || Number.isNaN(a) || h < 0 || a < 0) return;
+    if (h === a) {
+      toast.error('Draws are not allowed in playoffs. One team must win.');
+      return;
+    }
     onChange(updatePlayoffScore(tournament, matchId, h, a));
     setEditingId(null);
     setHomeScore('');
@@ -120,7 +125,7 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
                                 <Input type="number" min="0" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-12 h-6 text-center text-xs" onKeyDown={(e) => e.key === 'Enter' && handleSaveScore(match.id)} />
                               </div>
                               <Button size="sm" className="w-full h-6 text-xs" onClick={() => handleSaveScore(match.id)}>
-                                <Check className="h-3 w-3 mr-1" /> Save (no draws)
+                                <Check className="h-3 w-3 mr-1" /> Save Score
                               </Button>
                             </div>
                           ) : (

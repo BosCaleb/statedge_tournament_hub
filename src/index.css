@@ -89,7 +89,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 30% 15%;
-    --muted-foreground: 0 0% 100%;
+    --muted-foreground: 220 10% 60%;
 
     --accent: 45 95% 55%;
     --accent-foreground: 220 55% 10%;
@@ -200,5 +200,10 @@
     font-family: 'Oswald', monospace;
     font-weight: 700;
     letter-spacing: 0.05em;
+  }
+
+  /* Improve espn-section-header contrast in dark mode */
+  .dark .espn-section-header {
+    background: hsl(222 47% 22%);
   }
 }

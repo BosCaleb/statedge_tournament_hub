@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { Tournament } from '@/lib/types';
 import { calculateStandings, exportToCSV } from '@/lib/tournament-store';
 import { exportStandingsPDF } from '@/lib/pdf-export';
 import { Button } from '@/components/ui/button';
 import { Trophy, Download, FileText } from 'lucide-react';
+import { downloadFile } from '@/lib/utils';
 
 interface Props {
   tournament: Tournament;
@@ -11,15 +13,16 @@ interface Props {
 export function StandingsView({ tournament }: Props) {
   const handleExport = (poolId: string, poolName: string) => {
     const standings = calculateStandings(tournament, poolId);
-    const csv = exportToCSV(standings, poolName);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${poolName}-standings.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(exportToCSV(standings, poolName), `${poolName}-standings.csv`);
   };
+
+  const standingsByPool = useMemo(() => {
+    const map: Record<string, ReturnType<typeof calculateStandings>> = {};
+    tournament.pools.forEach(pool => {
+      map[pool.id] = calculateStandings(tournament, pool.id);
+    });
+    return map;
+  }, [tournament.pools, tournament.fixtures, tournament.pointsForWin, tournament.pointsForDraw, tournament.pointsForLoss]);
 
   return (
     <div className="space-y-6">
@@ -36,7 +39,7 @@ export function StandingsView({ tournament }: Props) {
       </div>
 
       {tournament.pools.map(pool => {
-        const standings = calculateStandings(tournament, pool.id);
+        const standings = standingsByPool[pool.id] ?? [];
         if (standings.length === 0) return null;
 
         return (

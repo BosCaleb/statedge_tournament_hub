@@ -8,6 +8,16 @@ import { PlayoffBracket } from '@/components/PlayoffBracket';
 import { PlayerManager } from '@/components/PlayerManager';
 import { LoginPage } from '@/components/LoginPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -46,6 +56,7 @@ const Index = () => {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -193,11 +204,13 @@ const Index = () => {
     setRole(null);
   }
 
-  async function handleReset() {
+  function handleReset() {
     if (!isAdmin || !tournamentId) return;
-    const confirmed = window.confirm('Reset all tournament data? This will remove teams, players, pools, fixtures and playoffs.');
-    if (!confirmed) return;
+    setResetDialogOpen(true);
+  }
 
+  async function confirmReset() {
+    if (!isAdmin || !tournamentId) return;
     try {
       setLoading(true);
       const fresh = await resetTournament(tournamentId);
@@ -387,6 +400,23 @@ const Index = () => {
           </Tabs>
         )}
       </main>
+
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Tournament?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove all teams, players, pools, fixtures and playoffs. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void confirmReset()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Reset Everything
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

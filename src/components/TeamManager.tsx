@@ -3,8 +3,9 @@ import { Tournament } from '@/lib/types';
 import { addTeam, removeTeam, generateTeamTemplate, importTeamsFromCSV } from '@/lib/tournament-store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Users, Download, Upload } from 'lucide-react';
+import { Plus, Trash2, Users, Download, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadFile } from '@/lib/utils';
 
 interface Props {
   tournament: Tournament;
@@ -14,6 +15,7 @@ interface Props {
 export function TeamManager({ tournament, onChange }: Props) {
   const [name, setName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleAdd = () => {
     if (!name.trim()) return;
@@ -22,14 +24,7 @@ export function TeamManager({ tournament, onChange }: Props) {
   };
 
   const handleDownloadTemplate = () => {
-    const csv = generateTeamTemplate(tournament);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'team-template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(generateTeamTemplate(tournament), 'team-template.csv');
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,14 +85,36 @@ export function TeamManager({ tournament, onChange }: Props) {
                   : 'Unassigned'}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onChange(removeTeam(tournament, team.id))}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {pendingDeleteId === team.id ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { onChange(removeTeam(tournament, team.id)); setPendingDeleteId(null); }}
+                  className="text-destructive hover:text-destructive h-7 px-2 text-xs font-bold"
+                >
+                  Confirm
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPendingDeleteId(null)}
+                  className="h-7 w-7 p-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPendingDeleteId(team.id)}
+                className="text-destructive hover:text-destructive"
+                title="Delete team and all their fixtures"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ))}
       </div>

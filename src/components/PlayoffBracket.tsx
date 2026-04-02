@@ -27,7 +27,8 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
     const h = parseInt(homeScore, 10);
     const a = parseInt(awayScore, 10);
     if (readOnly || Number.isNaN(h) || Number.isNaN(a) || h < 0 || a < 0) return;
-    if (h === a) {
+    const match = tournament.playoffs.find(m => m.id === matchId);
+    if (h === a && !match?.isThirdPlace) {
       toast.error('Draws are not allowed in playoffs. One team must win.');
       return;
     }
@@ -42,7 +43,7 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
     onChange(clearPlayoffScore(tournament, matchId));
   };
 
-  const rounds = [...new Set(tournament.playoffs.map((m) => m.round))].sort((a, b) => b - a);
+  const rounds = [...new Set(tournament.playoffs.filter(m => !m.isThirdPlace).map((m) => m.round))].sort((a, b) => b - a);
 
   const getRoundName = (round: number): string => {
     if (round === 1) return 'Final';
@@ -100,7 +101,7 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
                 </h3>
                 <div className="space-y-4" style={{ paddingTop: `${(rounds[0] / round - 1) * 40}px` }}>
                   {tournament.playoffs
-                    .filter((m) => m.round === round)
+                    .filter((m) => m.round === round && !m.isThirdPlace)
                     .sort((a, b) => a.position - b.position)
                     .map((match) => {
                       const isEditing = editingId === match.id;
@@ -169,6 +170,71 @@ export function PlayoffBracket({ tournament, onChange, readOnly = false }: Props
               </div>
             ))}
           </div>
+
+          {(() => {
+            const thirdPlaceMatch = tournament.playoffs.find(m => m.isThirdPlace);
+            if (!thirdPlaceMatch) return null;
+            const isEditing = editingId === thirdPlaceMatch.id;
+            const canEdit = Boolean(thirdPlaceMatch.homeTeamId && thirdPlaceMatch.awayTeamId);
+
+            return (
+              <div className="space-y-2">
+                <h3 className="font-bold text-sm uppercase tracking-wide text-muted-foreground">
+                  3rd Place
+                </h3>
+                <div className={`rounded-lg border p-3 space-y-2 max-w-[260px] ${thirdPlaceMatch.played ? 'bg-card border-secondary/30' : 'bg-card'}`}>
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs flex-1 truncate">{getTeamName(tournament, thirdPlaceMatch.homeTeamId)}</span>
+                        <Input type="number" min="0" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-12 h-6 text-center text-xs" autoFocus />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs flex-1 truncate">{getTeamName(tournament, thirdPlaceMatch.awayTeamId)}</span>
+                        <Input type="number" min="0" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-12 h-6 text-center text-xs" onKeyDown={(e) => e.key === 'Enter' && handleSaveScore(thirdPlaceMatch.id)} />
+                      </div>
+                      <Button size="sm" className="w-full h-6 text-xs" onClick={() => handleSaveScore(thirdPlaceMatch.id)}>
+                        <Check className="h-3 w-3 mr-1" /> Save Score
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        className="w-full text-left space-y-1"
+                        onClick={() => {
+                          if (!canEdit || readOnly) return;
+                          setEditingId(thirdPlaceMatch.id);
+                          setHomeScore(thirdPlaceMatch.homeScore?.toString() || '');
+                          setAwayScore(thirdPlaceMatch.awayScore?.toString() || '');
+                        }}
+                        disabled={!canEdit || readOnly}
+                      >
+                        <div className={`flex justify-between text-sm ${thirdPlaceMatch.played && (thirdPlaceMatch.homeScore ?? 0) > (thirdPlaceMatch.awayScore ?? 0) ? 'font-bold' : ''}`}>
+                          <span className="truncate">{getTeamName(tournament, thirdPlaceMatch.homeTeamId)}</span>
+                          {thirdPlaceMatch.played && <span className="font-mono">{thirdPlaceMatch.homeScore}</span>}
+                        </div>
+                        <div className={`flex justify-between text-sm ${thirdPlaceMatch.played && (thirdPlaceMatch.awayScore ?? 0) > (thirdPlaceMatch.homeScore ?? 0) ? 'font-bold' : ''}`}>
+                          <span className="truncate">{getTeamName(tournament, thirdPlaceMatch.awayTeamId)}</span>
+                          {thirdPlaceMatch.played && <span className="font-mono">{thirdPlaceMatch.awayScore}</span>}
+                        </div>
+                      </button>
+                      {!readOnly && thirdPlaceMatch.played && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute -top-1 -right-1 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleClearScore(thirdPlaceMatch.id)}
+                          title="Clear score"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
